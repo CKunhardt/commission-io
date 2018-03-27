@@ -1,0 +1,29 @@
+<% include partials/header %>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-offset-3 col-md-6 jumbotron">
+            <form class="form-horizontal" action="/profile" method="POST">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="profile-address">Current Address</label>
+                    <div class="col-sm-10">
+                        <span class="form-control"><%= currentAddress %></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="profile-address">New Address</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" type="text" id="profile-address" value="" name="address" placeholder="Ethereum wallet address:">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button class="btn btn-default" type="submit">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<% include partials/footer %>
