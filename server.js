@@ -7,7 +7,7 @@ var http = require("http"),
     Web3 = require("web3"),
     contract = require("truffle-contract"),
     commissionJSON = require("./build/contracts/Commission.json"),
-    contract_id = require("./contract-config"),
+    contract_stuff = require("./contract-config"),
     passport = require("passport"),
     LocalStrategy = require("passport-local").Strategy,
     User = require("./models/user");
@@ -17,19 +17,29 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const Commission = contract(commissionJSON);
+const Commission = contract({
+    abi: commissionJSON,
+    unlinked_binary: contract_stuff.binary,
+    address: contract_stuff.id
+});
 
+var web3;
 if (typeof web3 !== "undefined") {
-    var web3 = new Web3(web3.currentProvider);
+    web3 = new Web3(web3.currentProvider);
 } else {
-    var web3 = new Web3(
-        new Web3.providers.HttpProvider("http://localhost:8545")
-    );
+    web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
 Commission.setProvider(web3.currentProvider);
 
-var commission = Commission.at(contract_id.id);
+if (typeof Commission.currentProvider.sendAsync !== "function") {
+    Commission.currentProvider.sendAsync = function() {
+        return Commission.currentProvider.send.apply(
+            Commission.currentProvider,
+            arguments
+        );
+    };
+}
 
 // Passport Configuration
 app.use(
@@ -144,15 +154,18 @@ function sendEthers(req) {
     let amountToSend = req.body.amount;
     let nonce = web3.eth.getTransactionCount(wallet);
     if (destination == null) return false;
-    commission
-        .payArtist(destination, {
-            from: wallet,
-            value: amountToSend,
-            gas: 21000
+    var deployed;
+    Commission.deployed()
+        .then(function(instance) {
+            var deployed = instance;
+            console.log(instance);
+            return instance.payArtist(destination, {
+                from: wallet,
+                value: amountToSend,
+                gas: 21000
+            });
         })
-        .then(function() {
-            console.log("paid");
-        })
+        .then(function(result) {})
         .catch(function(err) {
             console.log(err);
         });
